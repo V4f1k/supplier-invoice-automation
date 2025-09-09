@@ -122,11 +122,25 @@ async def extract_invoice_text(
         HTTPException: If file validation fails or processing errors occur
     """
     
-    # Validate file type
-    if file.content_type not in SUPPORTED_FILE_TYPES:
-        logger.warning(f"Unsupported file type: {file.content_type}")
+    # Validate file type - handle N8N sending multipart/form-data as content_type
+    actual_content_type = file.content_type
+    
+    # If N8N sends multipart/form-data, try to detect from filename
+    if actual_content_type == "multipart/form-data" and file.filename:
+        file_ext = file.filename.lower().split('.')[-1] if '.' in file.filename else ''
+        ext_to_mime = {
+            'pdf': 'application/pdf',
+            'png': 'image/png',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg'
+        }
+        actual_content_type = ext_to_mime.get(file_ext, actual_content_type)
+        logger.info(f"Detected file type from extension: {actual_content_type}")
+    
+    if actual_content_type not in SUPPORTED_FILE_TYPES:
+        logger.warning(f"Unsupported file type: {actual_content_type} (original: {file.content_type})")
         raise InvalidFileTypeError(
-            file_type=file.content_type,
+            file_type=actual_content_type,
             supported_types=list(SUPPORTED_FILE_TYPES)
         )
     

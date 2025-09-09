@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: invoice-ocr-app
+    ports:
+      - "0.0.0.0:8000:8000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    networks:
+      - invoice-net
+    volumes:
+      - ./app:/app/app:ro  # Mount app code for development (read-only)
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: invoice-ocr-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - invoice-net
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+networks:
+  invoice-net:
+    driver: bridge
+
+volumes:
+  redis_data:
+    driver: local

@@ -1,0 +1,70 @@
+# Quality Gate Decision for Story 1.2: Surya-OCR Integration
+
+# Required fields (keep these first)
+schema: 1
+story: "1.2"
+story_title: "Surya-OCR Integration"
+gate: "CONCERNS" # PASS|CONCERNS|FAIL|WAIVED
+status_reason: "Core functionality implemented correctly with comprehensive tests, but API test inconsistencies and missing dependency management concerns require attention"
+reviewer: "Quinn (Test Architect)"
+updated: "2025-09-09T06:45:17Z"
+
+# Always present but only active when WAIVED
+waiver: { active: false }
+
+# Issues (if any) - Use fixed severity: low | medium | high
+top_issues:
+  - id: "TEST-001"
+    severity: medium
+    finding: "API tests had inconsistent response format expectations (text vs structured data)"
+    suggested_action: "Fixed during review - tests now align with structured API responses"
+  - id: "DEP-001"
+    severity: medium  
+    finding: "Core OCR dependencies (surya-ocr, pymupdf) are commented out in pyproject.toml"
+    suggested_action: "Uncomment and install dependencies when available, or document fallback strategy"
+  - id: "ARCH-001"
+    severity: low
+    finding: "File format validation happened after mock mode check, bypassing validation in tests"
+    suggested_action: "Fixed during review - validation now occurs before mock mode"
+
+# Risk summary
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 2, low: 1 }
+  recommendations:
+    must_fix: ["Resolve dependency availability before production"]
+    monitor: ["Test coverage for edge cases with real dependencies"]
+
+# Extended fields for comprehensive documentation
+quality_score: 78  # 100 - (20*0 FAILs) - (10*2 medium CONCERNS) - (2*1 low concerns)
+expires: "2025-09-23T06:45:17Z"  # 2 weeks from review
+
+evidence:
+  tests_reviewed: 21
+  risks_identified: 3
+  trace:
+    ac_covered: [1, 2, 3, 4, 5]  # All 5 acceptance criteria have test coverage
+    ac_gaps: []  # No coverage gaps found
+
+nfr_validation:
+  security: 
+    status: PASS
+    notes: "Proper input validation, file type checking, secure temp file handling"
+  performance: 
+    status: PASS
+    notes: "Async implementation, efficient caching strategy, proper resource cleanup"
+  reliability: 
+    status: CONCERNS
+    notes: "Dependency availability concern - missing fallback for production deployment"
+  maintainability: 
+    status: PASS
+    notes: "Well-structured code, comprehensive error handling, good separation of concerns"
+
+recommendations:
+  immediate:  # Must address before production
+    - action: "Install or provide fallback for surya-ocr and pymupdf dependencies"
+      refs: ["pyproject.toml:20-24", "app/services/ocr_service.py:10-20"]
+  future:  # Can be addressed later
+    - action: "Add integration tests with real OCR dependencies when available"
+      refs: ["tests/test_services.py", "tests/integration/"]
+    - action: "Consider implementing table extraction capabilities mentioned in architecture"
+      refs: ["docs/architecture/"]
